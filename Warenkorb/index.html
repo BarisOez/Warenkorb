@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warenkorb</title>
+</head>
+
+<body>
+  <div id="app">
+    <div class="container">
+      <!-- Verfügbare Waren -->
+      <div class="waren">
+        <h2>Verfügbare Waren</h2>
+        <table class="äußere-tabelle">
+          <thead>
+            <tr>
+              <th>Position</th>
+              <th>Artikel</th>
+              <th class="align-rechts">Preis</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="artikel in verfügbareWaren" :key="artikel.id">
+              <td>{{ artikel.id }}</td>
+              <td>{{ artikel.beschreibung }}</td>
+              <td class="align-rechts">{{ formatierePreis(artikel.preis) }}</td>
+              <td>
+                <button class="kaufen-button" @click="wareHinzufügen(artikel)" :disabled="artikel.menge >= artikel.limit">Kaufen</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Warenkorb -->
+      <div class="warenkorb">
+        <h2>
+          Warenkorb
+          <button class="leeren-button" @click="warenkorbLeeren" v-show="warenkorb.length > 0">&times;</button>
+        </h2>
+        <table class="äußere-tabelle warenkorb-tabelle">
+          <thead>
+            <tr class="grauer-hintergrund">
+              <th>Position</th>
+              <th>Artikel</th>
+              <th class="align-rechts">Preis</th>
+              <th>Anzahl</th>
+              <th class="align-rechts">Summe</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="warenkorb.length === 0">
+              <td colspan="6">Keine Artikel im Warenkorb</td>
+            </tr>
+            <tr v-else v-for="(artikel, index) in warenkorb" :key="artikel.id">
+              <td>{{ artikel.id }}</td>
+              <td>{{ artikel.beschreibung }}</td>
+              <td class="align-rechts">{{ formatierePreis(artikel.preis) }}</td>
+              <td>
+                <button class="menge-button minus" @click="mengeVerringern(artikel)">-</button>
+                {{ artikel.menge }}
+                <button v-show="artikel.menge < artikel.limit" class="menge-button plus"
+                  @click="mengeErhöhen(artikel)">+</button>
+              </td>
+              <td class="align-rechts">{{ formatierePreis(artikel.menge * artikel.preis) }}</td>
+              <td></td>
+            </tr>
+          </tbody>
+          <tfoot v-if="warenkorb.length > 0">
+            <tr class="grauer-hintergrund">
+              <td colspan="3">{{ warenkorb.length }} Artikel</td>
+              <td colspan="1" class="align-rechts">{{ gesamtanzahlArtikel }} </td>
+              <td colspan="1" class="align-rechts">Total: {{ formatierePreis(gesamtsumme) }}</td>
+              
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+    .container {
+      display: flex;
+      padding: 20px;
+    }
+
+    .waren,
+    .warenkorb {
+      flex: 1;
+      margin-right: 20px;
+    }
+
+    .äußere-tabelle {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid black;
+      border-radius: 8px; /* Abgerundete Ecken */
+    }
+
+    .äußere-tabelle th,
+    .äußere-tabelle td {
+      border: none;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .warenkorb-tabelle {
+      box-shadow: 5px 5px 5px #888888;
+      border-radius: 8px; /* Abgerundete Ecken */
+    }
+
+    .warenkorb-tabelle th,
+    .warenkorb-tabelle td {
+      border: none;
+      padding: 8px;
+    }
+
+    .warenkorb-tabelle button {
+      margin: 0;
+      padding: 5px 10px;
+      border: none;
+      cursor: pointer;
+      background-color: transparent; /* Hintergrund entfernen */
+      color: #FF0000; /* Rote Schriftfarbe */
+    }
+
+    .kaufen-button {
+      color: black;
+      border: 1px solid #020f02; /* Dünner Rand mit Originalfarbe */
+      border-radius: 4px; /* Abgerundete Ecken */
+    }
+
+    .menge-button {
+      padding: 5px 10px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .menge-button.plus {
+      color: green;
+      font-size: x-large;
+    }
+
+    .menge-button.minus {
+      color: red;
+      font-size: x-large;
+    }
+
+    .leeren-button {
+      color: #FF0000; /* Rot */
+      margin-left: 10px;
+      border: none;
+      background-color: transparent;
+      font-size: xx-large;
+    }
+
+    /* Neue CSS-Regeln für Ausrichtung */
+    .align-rechts {
+      text-align: right;
+    }
+
+    /* Neue CSS-Regel für Hintergrundfarbe der Überschrift und Fußzeile */
+    .grauer-hintergrund {
+      background-color: #f0f0f0; /* Hellgrau */
+    }
+  </style>
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        verfügbareWaren: [
+          { "id": "a25-1", "beschreibung": "Tomate Berner Rose", "preis": 1.95, "limit": 5 },
+          { "id": "f3", "beschreibung": "Fisch Forelle geräuchert", "preis": 4.25, "limit": 3 },
+          { "id": "dink1", "beschreibung": "Dinkelbrot Rustical", "preis": 4.60, "limit": 2 },
+          { "id": "b1", "beschreibung": "Butter 250gr", "preis": 2.15, "limit": 5 },
+          { "id": "smgreen", "beschreibung": "Smoothie Grün", "preis": 2.80, "limit": 6 },
+          { "id": "smred", "beschreibung": "Smoothie Rot", "preis": 2.65, "limit": 4 },
+          { "id": "schogi6", "beschreibung": "Mars 6-pack", "preis": 3.95, "limit": 5 },
+          { "id": "schogi12", "beschreibung": "Mars 12-pack", "preis": 7.85, "limit": 2 },
+          
+          // Weitere Artikel nach Bedarf hinzufügen
+        ],
+        warenkorb: []
+      },
+      computed: {
+        gesamtsumme() {
+          return this.warenkorb.reduce((summe, artikel) => summe + artikel.menge * artikel.preis, 0);
+        },
+        gesamtanzahlArtikel() {
+          return this.warenkorb.reduce((anzahl, artikel) => anzahl + artikel.menge, 0);
+        }
+      },
+      methods: {
+        wareHinzufügen(artikel) {
+          const warenkorbArtikel = this.warenkorb.find(ware => ware.id === artikel.id);
+          if (warenkorbArtikel) {
+            warenkorbArtikel.menge++;
+          } else {
+            this.warenkorb.push({ ...artikel, menge: 1 });
+          }
+        },
+        mengeErhöhen(artikel) {
+          artikel.menge++;
+        },
+        mengeVerringern(artikel) {
+          artikel.menge--;
+          if (artikel.menge === 0) {
+            this.warenkorb = this.warenkorb.filter(ware => ware.id !== artikel.id);
+          }
+        },
+        warenkorbLeeren() {
+          this.warenkorb = [];
+        },
+        formatierePreis(preis) {
+          return (Math.round(preis * 20) / 20).toFixed(2);
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
